@@ -1,29 +1,62 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingCart, BarChart3, CalendarDays, Home, Menu, X, LogOut, Bell, User } from "lucide-react";
+import { ShoppingCart, CalendarDays, Home, Menu, X, LogOut, ClipboardCheck, ShieldCheck, Gift, Users, UserRound } from "lucide-react";
 import { useAppState } from "@/context/AppContext";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useAuth } from "@/contexts/AuthContext";
+import { getMembershipStatus } from "@/lib/membership";
+import { readRegistrations } from "@/lib/registrations";
 
-const navItems = [
-  { path: "/", label: "Sports", icon: Home },
-  { path: "/shop", label: "Shop", icon: ShoppingCart },
-  { path: "/events", label: "Events", icon: CalendarDays },
-  { path: "/notifications", label: "Notifications", icon: Bell },
-  { path: "/profile", label: "Profile", icon: User },
-  { path: "/analytics", label: "Analytics", icon: BarChart3 },
+const adminNavItems = [
+  { path: "/dashboard", label: "Dashboard", icon: Home },
+  { path: "/memberships", label: "Members", icon: ShieldCheck },
+  { path: "/event-creation", label: "Events", icon: CalendarDays },
+  { path: "/registrations", label: "Registrations", icon: ClipboardCheck },
+  { path: "/notifications", label: "Approvals", icon: Gift },
+];
+
+const userNavItems = [
+  { path: "/dashboard", label: "Dashboard", icon: Home },
+  { path: "/tournament-registration", label: "Register", icon: ClipboardCheck },
+  { path: "/events", label: "My Events", icon: CalendarDays },
+  { path: "/", label: "My Team", icon: Users },
+  { path: "/shop", label: "Store", icon: ShoppingCart },
+  { path: "/notifications", label: "My Rewards", icon: Gift },
+  { path: "/profile", label: "Profile", icon: UserRound },
 ];
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { cartCount, unreadNotificationCount } = useAppState();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navItems = user?.role === "admin" ? adminNavItems : userNavItems;
+  const adminNotificationCount = useMemo(() => {
+    if (user?.role !== "admin") return 0;
+
+    try {
+      const members = JSON.parse(localStorage.getItem("sports_members") || "[]") as Array<{
+        startDate: string;
+        expiryDate: string;
+        approvalDate: string | null;
+      }>;
+      const pendingMembers = members.filter(
+        (member) => getMembershipStatus(member.startDate, member.expiryDate, member.approvalDate) === "Pending",
+      ).length;
+      const pendingRegistrations = readRegistrations().filter((registration) => registration.approvalStatus === "pending").length;
+
+      return pendingMembers + pendingRegistrations;
+    } catch {
+      return 0;
+    }
+  }, [user?.role]);
+  const notificationCount = user?.role === "admin" ? adminNotificationCount : unreadNotificationCount;
+  const homePath = user?.role === "admin" ? "/dashboard" : "/";
 
   const handleLogout = () => {
-    localStorage.removeItem("auth");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("user");
+    logout();
     setMobileOpen(false);
     navigate("/login", { replace: true });
   };
@@ -31,7 +64,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={homePath} className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm font-display">SP</span>
           </div>
@@ -52,14 +85,14 @@ const Navbar = () => {
               >
                 <item.icon className="w-4 h-4" />
                 {item.label}
-                {item.label === "Shop" && cartCount > 0 && (
+                {item.path === "/shop" && cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
                     {cartCount}
                   </span>
                 )}
-                {item.label === "Notifications" && unreadNotificationCount > 0 && (
+                {item.path === "/notifications" && notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-gradient-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
-                    {unreadNotificationCount}
+                    {notificationCount}
                   </span>
                 )}
                 {active && (
@@ -114,9 +147,14 @@ const Navbar = () => {
                   >
                     <item.icon className="w-4 h-4" />
                     {item.label}
-                    {item.label === "Notifications" && unreadNotificationCount > 0 && (
+                    {item.path === "/notifications" && notificationCount > 0 && (
                       <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-gradient-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
-                        {unreadNotificationCount}
+                        {notificationCount}
+                      </span>
+                    )}
+                    {item.path === "/shop" && cartCount > 0 && (
+                      <span className="ml-auto min-w-5 h-5 px-1 rounded-full bg-gradient-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+                        {cartCount}
                       </span>
                     )}
                   </Link>

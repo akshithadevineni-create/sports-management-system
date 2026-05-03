@@ -1,38 +1,64 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CalendarDays, Mail, MapPin, LogOut, UserCircle, ShieldCheck } from "lucide-react";
+import { CalendarDays, Mail, MapPin, LogOut, UserCircle, ShieldCheck, Phone, Trophy, UsersRound } from "lucide-react";
+import { clearSession, getCurrentUser, getCurrentUserKey } from "@/lib/auth";
 
-type StoredUser = {
-  email?: string;
-  name?: string;
+type TournamentRegistration = {
+  id: string;
+  userKey?: string | null;
+  userEmail?: string;
+  userPhone?: string;
+  eventName: string;
+  sportType: string;
+  eventDate?: string;
+  eventVenue?: string;
+  submittedAt: string;
+  fullName: string;
+  teamName: string;
+  playerCount: number;
 };
 
-type RegisteredEvent = {
-  id: string;
-  title: string;
-  sport: string;
-  date: string;
-  venue: string;
-  city: string;
+const readTournamentRegistrations = (): TournamentRegistration[] => {
+  try {
+    const storedRegistrations = localStorage.getItem("sports_registrations");
+    return storedRegistrations ? (JSON.parse(storedRegistrations) as TournamentRegistration[]) : [];
+  } catch {
+    return [];
+  }
 };
 
 const Profile = () => {
   const navigate = useNavigate();
 
   const user = useMemo(() => {
-    const storedUser = localStorage.getItem("user");
-    const parsedUser = storedUser ? (JSON.parse(storedUser) as StoredUser) : null;
+    const parsedUser = getCurrentUser();
     const email = parsedUser?.email || localStorage.getItem("userEmail") || "member@sports.com";
+    const phone = parsedUser?.phone || "Not added";
     const name = parsedUser?.name || email.split("@")[0];
 
-    return { email, name };
+    return { email, phone, name };
   }, []);
 
-  const registeredEvents = useMemo(() => {
-    const storedEvents = localStorage.getItem("registeredEvents");
-    return storedEvents ? (JSON.parse(storedEvents) as RegisteredEvent[]) : [];
-  }, []);
+  const userKey = useMemo(() => getCurrentUserKey(), []);
+
+  const registrations = useMemo(() => {
+    return readTournamentRegistrations().filter((registration) => {
+      if (userKey && registration.userKey) {
+        return registration.userKey === userKey;
+      }
+
+      if (user.email && registration.userEmail) {
+        return registration.userEmail.toLowerCase() === user.email.toLowerCase();
+      }
+
+      if (user.phone && registration.userPhone) {
+        return registration.userPhone === user.phone;
+      }
+
+      return false;
+    });
+  }, [user.email, user.phone, userKey]);
 
   const initials = user.name
     .split(" ")
@@ -42,9 +68,7 @@ const Profile = () => {
     .join("");
 
   const handleLogout = () => {
-    localStorage.removeItem("auth");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("user");
+    clearSession();
     navigate("/login", { replace: true });
   };
 
@@ -93,6 +117,13 @@ const Profile = () => {
                 </div>
               </div>
               <div className="flex items-start gap-3 text-muted-foreground">
+                <Phone className="w-4 h-4 mt-0.5" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide">Phone</p>
+                  <p className="text-foreground">{user.phone}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 text-muted-foreground">
                 <UserCircle className="w-4 h-4 mt-0.5" />
                 <div>
                   <p className="text-xs uppercase tracking-wide">Name</p>
@@ -122,18 +153,18 @@ const Profile = () => {
             transition={{ delay: 0.1 }}
             className="rounded-2xl border border-border bg-gradient-card p-6"
           >
-            <h2 className="text-xl font-display font-semibold text-foreground mb-5">Registered Events</h2>
+            <h2 className="text-xl font-display font-semibold text-foreground mb-5">Tournament Registrations</h2>
 
-            {registeredEvents.length === 0 ? (
+            {registrations.length === 0 ? (
               <div className="text-center py-16">
                 <CalendarDays className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">You have not registered for any events yet</p>
+                <p className="text-muted-foreground">You have not registered for any tournaments yet</p>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
-                {registeredEvents.map((event, index) => (
+                {registrations.map((registration, index) => (
                   <motion.div
-                    key={event.id}
+                    key={registration.id}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
@@ -141,8 +172,8 @@ const Profile = () => {
                   >
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
-                        <p className="text-xs text-primary font-medium mb-1">{event.sport}</p>
-                        <h3 className="font-display font-semibold text-foreground">{event.title}</h3>
+                        <p className="text-xs text-primary font-medium mb-1">{registration.sportType}</p>
+                        <h3 className="font-display font-semibold text-foreground">{registration.eventName}</h3>
                       </div>
                       <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                         Registered
@@ -151,15 +182,25 @@ const Profile = () => {
                     <div className="space-y-2 text-sm text-muted-foreground">
                       <p className="flex items-center gap-2">
                         <CalendarDays className="w-4 h-4" />
-                        {new Date(event.date).toLocaleDateString("en-IN", {
+                        {new Date(registration.eventDate || registration.submittedAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })}
                       </p>
+                      {registration.eventVenue && (
+                        <p className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4" />
+                          {registration.eventVenue}
+                        </p>
+                      )}
                       <p className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        {event.venue}, {event.city}
+                        <Trophy className="w-4 h-4" />
+                        {registration.teamName}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <UsersRound className="w-4 h-4" />
+                        {registration.playerCount} players
                       </p>
                     </div>
                   </motion.div>

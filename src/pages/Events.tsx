@@ -4,7 +4,6 @@ import { events, sports, cities } from "@/data/sportsData";
 import { Calendar, MapPin, Clock, Users, IndianRupee } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
 
 const formatINR = (value: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -24,39 +23,6 @@ const Events = () => {
   const { selectedSport, selectedCity } = useAppState();
   const [timeFilter, setTimeFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-
-  const handleRegister = (event: typeof events[number], sportName: string | undefined) => {
-    const registeredEvents = JSON.parse(localStorage.getItem("registeredEvents") || "[]") as Array<{
-      id: string;
-      title: string;
-      sport: string;
-      date: string;
-      venue: string;
-      city: string;
-    }>;
-
-    const alreadyRegistered = registeredEvents.some((item) => item.id === event.id);
-
-    if (alreadyRegistered) {
-      toast.info(`You are already registered for ${event.title}`);
-      return;
-    }
-
-    const nextEvents = [
-      ...registeredEvents,
-      {
-        id: event.id,
-        title: event.title,
-        sport: sportName || "General",
-        date: event.date,
-        venue: event.venue,
-        city: event.city,
-      },
-    ];
-
-    localStorage.setItem("registeredEvents", JSON.stringify(nextEvents));
-    toast.success("Registered successfully");
-  };
 
   const filteredEvents = useMemo(() => {
     let items = events;
@@ -112,6 +78,7 @@ const Events = () => {
             filteredEvents.map((event, i) => {
               const sport = sports.find((s) => s.id === event.sportId);
               const spotsLeft = event.maxParticipants - event.registered;
+
               return (
                 <motion.div
                   key={event.id}
@@ -152,13 +119,6 @@ const Events = () => {
                         </span>
                       </div>
                     </div>
-
-                    <button
-                      onClick={() => handleRegister(event, sport?.name)}
-                      className="flex-shrink-0 px-6 py-3 rounded-xl bg-gradient-primary text-primary-foreground font-medium text-sm hover:shadow-glow transition-shadow"
-                    >
-                      Register
-                    </button>
                   </div>
                 </motion.div>
               );

@@ -1,5 +1,6 @@
 import { Activity, Dribbble, CircleDot, Target, Volleyball, Bike, Waves, Dumbbell } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { ecommerceProducts } from "./ecommerceProducts";
 
 export interface Sport {
   id: string;
@@ -59,7 +60,7 @@ export const sports: Sport[] = [
   { id: "gym", name: "Gym & Fitness", icon: Dumbbell, color: "hsl(270 80% 60%)", image: "" },
 ];
 
-export const products: Product[] = [
+export const fallbackProducts: Product[] = [
   // Football
   { id: "p1", sportId: "football", name: "Pro Match Football", category: "equipment", price: 4149, brand: "Nike", rating: 4.8, image: "", description: "Official match ball with thermal bonding technology" },
   { id: "p2", sportId: "football", name: "Speed Boots X", category: "equipment", price: 10789, brand: "Adidas", rating: 4.7, image: "", description: "Lightweight speed boots with grip sole" },
@@ -87,15 +88,17 @@ export const products: Product[] = [
   { id: "p20", sportId: "badminton", name: "Feather Shuttlecocks", category: "equipment", price: 2074, brand: "Li-Ning", rating: 4.7, image: "", description: "Tournament grade feather shuttlecocks (12 pack)" },
 ];
 
+export const products: Product[] = ecommerceProducts.length > 0 ? ecommerceProducts : fallbackProducts;
+
 export const events: SportEvent[] = [
-  { id: "e1", sportId: "football", title: "City Football Championship", type: "tournament", date: "2026-03-15", time: "09:00", venue: "Central Sports Complex", city: "Mumbai", organizer: "City Sports Federation", entryFee: 2075, maxParticipants: 64, registered: 48, description: "Annual city-wide football championship with prizes for top 3 teams" },
-  { id: "e2", sportId: "football", title: "Weekend Football Coaching", type: "coaching", date: "2026-03-08", time: "07:00", venue: "Green Park Stadium", city: "Mumbai", organizer: "Coach Academy", entryFee: 1245, maxParticipants: 30, registered: 22, description: "Professional coaching session for intermediate players" },
-  { id: "e3", sportId: "football", title: "Evening Practice Match", type: "practice", date: "2026-03-05", time: "18:00", venue: "Local Turf Arena", city: "Mumbai", organizer: "FootballBuddies", entryFee: 0, maxParticipants: 22, registered: 18, description: "Casual evening practice match open to all skill levels" },
-  { id: "e4", sportId: "cricket", title: "Weekend Cricket League", type: "league", date: "2026-03-10", time: "08:00", venue: "Oval Ground", city: "Delhi", organizer: "Cricket Club India", entryFee: 2490, maxParticipants: 80, registered: 65, description: "Weekend T20 league running through March" },
-  { id: "e5", sportId: "cricket", title: "Net Practice Session", type: "practice", date: "2026-03-06", time: "06:00", venue: "Sports Academy Nets", city: "Delhi", organizer: "Delhi Cricket Academy", entryFee: 830, maxParticipants: 20, registered: 14, description: "Morning net practice with bowling machine" },
-  { id: "e6", sportId: "basketball", title: "3x3 Basketball Tournament", type: "tournament", date: "2026-03-20", time: "10:00", venue: "Indoor Sports Hall", city: "Bangalore", organizer: "Hoop Dreams", entryFee: 1660, maxParticipants: 32, registered: 28, description: "Fast-paced 3x3 basketball tournament" },
-  { id: "e7", sportId: "tennis", title: "Mixed Doubles Open", type: "tournament", date: "2026-03-22", time: "09:00", venue: "Tennis Academy Courts", city: "Chennai", organizer: "TennisFirst", entryFee: 3320, maxParticipants: 16, registered: 12, description: "Open mixed doubles tournament" },
-  { id: "e8", sportId: "badminton", title: "Badminton Singles League", type: "league", date: "2026-03-12", time: "18:00", venue: "Shuttle Zone Arena", city: "Hyderabad", organizer: "ShuttlePro", entryFee: 1245, maxParticipants: 24, registered: 20, description: "Monthly singles league for all skill levels" },
+  { id: "e1", sportId: "football", title: "City Football Championship", type: "tournament", date: "2026-03-15", time: "09:00", venue: "Central Sports Complex", city: "Mumbai", organizer: "City Sports Federation", entryFee: 2075, maxParticipants: 64, registered: 31, description: "Annual city-wide football championship with prizes for top 3 teams" },
+  { id: "e2", sportId: "football", title: "Weekend Football Coaching", type: "coaching", date: "2026-03-08", time: "07:00", venue: "Green Park Stadium", city: "Mumbai", organizer: "Coach Academy", entryFee: 1245, maxParticipants: 30, registered: 12, description: "Professional coaching session for intermediate players" },
+  { id: "e3", sportId: "football", title: "Evening Practice Match", type: "practice", date: "2026-03-05", time: "18:00", venue: "Local Turf Arena", city: "Mumbai", organizer: "FootballBuddies", entryFee: 0, maxParticipants: 22, registered: 9, description: "Casual evening practice match open to all skill levels" },
+  { id: "e4", sportId: "cricket", title: "Weekend Cricket League", type: "league", date: "2026-03-10", time: "08:00", venue: "Oval Ground", city: "Delhi", organizer: "Cricket Club India", entryFee: 2490, maxParticipants: 80, registered: 37, description: "Weekend T20 league running through March" },
+  { id: "e5", sportId: "cricket", title: "Net Practice Session", type: "practice", date: "2026-03-06", time: "06:00", venue: "Sports Academy Nets", city: "Delhi", organizer: "Delhi Cricket Academy", entryFee: 830, maxParticipants: 20, registered: 7, description: "Morning net practice with bowling machine" },
+  { id: "e6", sportId: "basketball", title: "3x3 Basketball Tournament", type: "tournament", date: "2026-03-20", time: "10:00", venue: "Indoor Sports Hall", city: "Bangalore", organizer: "Hoop Dreams", entryFee: 1660, maxParticipants: 32, registered: 15, description: "Fast-paced 3x3 basketball tournament" },
+  { id: "e7", sportId: "tennis", title: "Mixed Doubles Open", type: "tournament", date: "2026-03-22", time: "09:00", venue: "Tennis Academy Courts", city: "Chennai", organizer: "TennisFirst", entryFee: 3320, maxParticipants: 16, registered: 6, description: "Open mixed doubles tournament" },
+  { id: "e8", sportId: "badminton", title: "Badminton Singles League", type: "league", date: "2026-03-12", time: "18:00", venue: "Shuttle Zone Arena", city: "Hyderabad", organizer: "ShuttlePro", entryFee: 1245, maxParticipants: 24, registered: 10, description: "Monthly singles league for all skill levels" },
 ];
 
 export const badges: Badge[] = [

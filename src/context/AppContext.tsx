@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 
 export interface NotificationItem {
   id: number;
@@ -54,6 +54,8 @@ interface AppState {
   setSelectedCity: (city: string | null) => void;
   addToCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
+  updateCartQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
   toggleWishlist: (productId: string) => void;
   toggleNotificationRead: (id: number) => void;
   cartCount: number;
@@ -62,11 +64,33 @@ interface AppState {
 
 const AppContext = createContext<AppState | undefined>(undefined);
 
+const SELECTED_SPORT_KEY = "sports_selected_sport";
+const SELECTED_CITY_KEY = "sports_selected_city";
+const CART_KEY = "sports_cart";
+const WISHLIST_KEY = "sports_wishlist";
+
+const readString = (key: string) => {
+  if (typeof window === "undefined") return null;
+
+  return window.localStorage.getItem(key);
+};
+
+const readJson = <T,>(key: string, fallback: T): T => {
+  if (typeof window === "undefined") return fallback;
+
+  try {
+    const rawValue = window.localStorage.getItem(key);
+    return rawValue ? (JSON.parse(rawValue) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [selectedSport, setSelectedSport] = useState<string | null>(null);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [cart, setCart] = useState<{ productId: string; quantity: number }[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [selectedSport, setSelectedSport] = useState<string | null>(() => readString(SELECTED_SPORT_KEY));
+  const [selectedCity, setSelectedCity] = useState<string | null>(() => readString(SELECTED_CITY_KEY));
+  const [cart, setCart] = useState<{ productId: string; quantity: number }[]>(() => readJson(CART_KEY, []));
+  const [wishlist, setWishlist] = useState<string[]>(() => readJson(WISHLIST_KEY, []));
   const [notificationItems, setNotificationItems] = useState<NotificationItem[]>(notifications);
 
   const addToCart = (productId: string) => {
@@ -81,6 +105,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setCart((prev) => prev.filter((i) => i.productId !== productId));
   };
 
+  const updateCartQuantity = (productId: string, quantity: number) => {
+    setCart((prev) => {
+      if (quantity <= 0) {
+        return prev.filter((item) => item.productId !== productId);
+      }
+
+      return prev.map((item) => (item.productId === productId ? { ...item, quantity } : item));
+    });
+  };
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
   const toggleWishlist = (productId: string) => {
     setWishlist((prev) => prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]);
   };
@@ -92,8 +130,69 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
   const unreadNotificationCount = notificationItems.filter((item) => !item.read).length;
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (selectedSport) {
+      window.localStorage.setItem(SELECTED_SPORT_KEY, selectedSport);
+    } else {
+      window.localStorage.removeItem(SELECTED_SPORT_KEY);
+    }
+  }, [selectedSport]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (selectedCity) {
+      window.localStorage.setItem(SELECTED_CITY_KEY, selectedCity);
+    } else {
+      window.localStorage.removeItem(SELECTED_CITY_KEY);
+    }
+  }, [selectedCity]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
+  }, [wishlist]);
+
+  const value = useMemo(
+    () => ({
+      selectedSport,
+      selectedCity,
+      cart,
+      wishlist,
+      notifications: notificationItems,
+      setSelectedSport,
+      setSelectedCity,
+      addToCart,
+      removeFromCart,
+      updateCartQuantity,
+      clearCart,
+      toggleWishlist,
+      toggleNotificationRead,
+      cartCount,
+      unreadNotificationCount,
+    }),
+    [
+      selectedSport,
+      selectedCity,
+      cart,
+      wishlist,
+      notificationItems,
+      cartCount,
+      unreadNotificationCount,
+    ],
+  );
+
   return (
-    <AppContext.Provider value={{ selectedSport, selectedCity, cart, wishlist, notifications: notificationItems, setSelectedSport, setSelectedCity, addToCart, removeFromCart, toggleWishlist, toggleNotificationRead, cartCount, unreadNotificationCount }}>
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );

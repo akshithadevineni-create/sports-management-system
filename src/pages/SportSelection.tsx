@@ -4,6 +4,7 @@ import { useAppState } from "@/context/AppContext";
 import { sports, cities } from "@/data/sportsData";
 import { MapPin, ChevronRight, Zap } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TeamCreationForm from "@/components/TeamCreationForm";
 
 const SportSelection = () => {
   const navigate = useNavigate();
@@ -124,6 +125,8 @@ const SportSelection = () => {
             </button>
           </motion.div>
         )}
+
+        <TeamCreationForm />
       </div>
     </div>
   );
